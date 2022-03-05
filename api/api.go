@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sbuttigieg/maze_solver/app_errors"
-	"github.com/sbuttigieg/maze_solver/constants"
+	"github.com/sbuttigieg/maze_solver/database"
 )
 
 // Initialise the API and its endpoints
@@ -26,25 +26,46 @@ func InitialiseApi() *gin.Engine {
 
 // Responds with the list of all levels as JSON.
 func getLevels(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, [][]int{{1, 1}, {1, 1}})
+	levels := database.GetAllLevels(database.DB) // retrieve all levels from database
+	c.IndentedJSON(http.StatusOK, levels)
 }
 
 // Responds with a level as JSON.
 func getLevelById(c *gin.Context) {
+	var errMsg error
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		panic(err)
+		errMsg = app_errors.ErrorMap[1005]
 	}
-	c.IndentedJSON(http.StatusOK, [][]int{{id}, {1, 1}})
+	level := database.GetLevelById(int(id), database.DB) // retrieve a level by ID from database
+
+	// Respond by the level for the passed ID or by the error if unsuccessful
+	if errMsg == nil {
+		c.IndentedJSON(http.StatusOK, level)
+	} else {
+		c.IndentedJSON(http.StatusBadRequest, errMsg)
+	}
 }
 
 // Responds with the ID of the deleted level.
 func deleteLevelById(c *gin.Context) {
+	var errMsg error
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		panic(err)
+		errMsg = app_errors.ErrorMap[1005]
 	}
-	c.IndentedJSON(http.StatusOK, fmt.Sprintf("Level %v deleted", id))
+	count := database.DeleteLevelById(int(id), database.DB) // delete a level by ID from database
+
+	// Respond by the level ID deleted or by the error if unsuccessful
+	if errMsg == nil {
+		if count > 0 {
+			c.IndentedJSON(http.StatusOK, fmt.Sprintf("Level %v deleted", id))
+		} else {
+			c.IndentedJSON(http.StatusOK, "Level not found")
+		}
+	} else {
+		c.IndentedJSON(http.StatusBadRequest, errMsg)
+	}
 }
 
 // Validates and stores the updated level in the database
@@ -82,8 +103,17 @@ func updateLevelById(c *gin.Context) {
 		}
 
 		if errMsg == nil {
-			fmt.Println(id, level)
+			updateLevel := fmt.Sprintf(
+				"%s='%v',%s=%v,%s=%v,%s=%v,%s=%v,%s=%v\n",
+				"level", string(level),
+				"size_x", validatedLevel.Size_x,
+				"size_y", validatedLevel.Size_y,
+				"min_path", validatedLevel.Min_path,
+				"possible_paths", validatedLevel.Possible_paths,
+				"winning_paths", validatedLevel.Winning_paths,
+			)
 			// Update level in the database
+			levelId = database.UpdateLevel(id, updateLevel, database.DB)
 		}
 	}
 
@@ -121,15 +151,23 @@ func addLevel(c *gin.Context) {
 
 		if errMsg == nil {
 			// Format the level data as a string
-			// Returns error 1004 if JSON marshalling fails
+			// Returns error 999 if JSON marshalling fails
 			level, err := json.Marshal(validatedLevel.Level)
 			if err != nil {
-				errMsg = app_errors.ErrorMap[1004]
+				errMsg = app_errors.ErrorMap[999]
 			}
 
 			if errMsg == nil {
-				// Insert level in the database
-				fmt.Println(level)
+				insertLevel := fmt.Sprintf(
+					"'%v',%v,%v,%v,%v,%v\n",
+					string(level),
+					validatedLevel.Size_x,
+					validatedLevel.Size_y,
+					validatedLevel.Min_path,
+					validatedLevel.Possible_paths,
+					validatedLevel.Winning_paths,
+				)
+				levelId = database.InsertNewLevel(database.DB, insertLevel)
 			}
 		}
 	}
@@ -142,8 +180,8 @@ func addLevel(c *gin.Context) {
 	}
 }
 
-func validateLevel(levelToValidate [][]int) (constants.LevelTableFields, error) {
-	level := constants.LevelTableFields{Level: levelToValidate}
+func validateLevel(levelToValidate [][]int) (database.LevelTableFields, error) {
+	level := database.LevelTableFields{Level: levelToValidate}
 
 	var errMsg error // variable to store the error message from validation
 
