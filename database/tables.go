@@ -1,8 +1,6 @@
 package database
 
 import (
-	"database/sql"
-
 	"github.com/sbuttigieg/maze_solver/constants"
 )
 
@@ -19,9 +17,9 @@ type LevelTableFields_Raw struct {
 	Level          []byte
 	Size_x         int
 	Size_y         int
-	Min_path       sql.NullInt16
-	Possible_paths sql.NullInt16
-	Winning_paths  sql.NullInt16
+	Min_path       int
+	Possible_paths int
+	Winning_paths  int
 }
 
 type LevelTableFields struct {

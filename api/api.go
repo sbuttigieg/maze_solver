@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sbuttigieg/maze_solver/api/min_path"
 	"github.com/sbuttigieg/maze_solver/app_errors"
 	"github.com/sbuttigieg/maze_solver/database"
 )
@@ -205,7 +206,8 @@ func validateLevel(levelToValidate [][]int) (database.LevelTableFields, error) {
 		level.Size_y = len(levelToValidate)
 		level.Size_x = len(levelToValidate[0])
 
-		// TODO: Calculate the minimum survivable path for the level
+		// Calculate the minimum survivable path for the level
+		level.Min_path, level.Possible_paths, level.Winning_paths, errMsg = min_path.CalculateMinPath(level.Level, level.Size_x, level.Size_y)
 	}
 	if errMsg == nil {
 		return level, nil

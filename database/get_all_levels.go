@@ -49,9 +49,9 @@ func GetAllLevels(db *sql.DB) map[int]LevelTableFields {
 			Level:          levels,
 			Size_x:         queryResultRaw.Size_x,
 			Size_y:         queryResultRaw.Size_y,
-			Min_path:       int(queryResultRaw.Min_path.Int16),       // converted from int16 to int
-			Possible_paths: int(queryResultRaw.Possible_paths.Int16), // converted from int16 to int
-			Winning_paths:  int(queryResultRaw.Winning_paths.Int16),  // converted from int16 to int
+			Min_path:       queryResultRaw.Min_path,
+			Possible_paths: queryResultRaw.Possible_paths,
+			Winning_paths:  queryResultRaw.Winning_paths,
 		}
 	}
 	return allLevels

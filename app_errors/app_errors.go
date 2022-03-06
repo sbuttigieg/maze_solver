@@ -27,8 +27,8 @@ var ErrorMap = map[int]ErrorStruct{
 	1003: {1003, "Invalid tile ID"},
 	1004: {1004, "Incorrect level type format"},
 	1005: {1005, "Incorrect level ID type"},
-	// 1006: {1006, "No Starting point in level"},
-	// 1007: {1007, "More than one Starting point in level"},
-	// 1008: {1008, "No Exit point in level"},
-	// 1009: {1009, "More than one Exit point in level"},
+	1006: {1006, "No Starting point in level"},
+	1007: {1007, "More than one Starting point in level"},
+	1008: {1008, "No Exit point in level"},
+	1009: {1009, "More than one Exit point in level"},
 }
